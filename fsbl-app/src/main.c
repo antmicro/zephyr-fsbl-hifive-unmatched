@@ -9,6 +9,8 @@
 #include <zephyr/fs/fs.h>
 #include <zephyr/logging/log.h>
 
+#include "sbi_dynamic_info.h"
+
 LOG_MODULE_REGISTER(ZephyrFSBL, LOG_LEVEL_INF);
 
 #define CPU_STACK_SIZE 1024
@@ -112,14 +114,16 @@ int load_binaries(void)
 	return 0;
 }
 
-typedef void (*boot_fun_t)(unsigned long, unsigned long);
+struct fw_dynamic_info *sbi_dynamic_info;
+
+typedef void (*boot_fun_t)(unsigned long, unsigned long, unsigned long);
 
 FUNC_NORETURN void boot_fn(void *arg)
 {
 	boot_fun_t boot_f = (boot_fun_t)SBI_ADDR;
 
 	arch_irq_lock();
-	boot_f((unsigned long)arg, (unsigned long)FDT_ADDR);
+	boot_f((unsigned long)arg, (unsigned long)FDT_ADDR, (unsigned long)sbi_dynamic_info);
 
 	LOG_ERR("Boot failed for thread %ld", (uintptr_t)arg);
 	__builtin_unreachable();
@@ -133,6 +137,17 @@ int main(void)
 		LOG_ERR("Failed to load binaries");
 		return 0;
 	}
+
+	/* Init dynamic info structure */
+	sbi_dynamic_info = (void *)ROUND_DOWN(IMAGE_ADDR - sizeof(struct fw_dynamic_info) * 2, 8);
+	*sbi_dynamic_info = (struct fw_dynamic_info){
+		.magic = FW_DYNAMIC_INFO_MAGIC_VALUE,
+		.version = FW_DYNAMIC_INFO_VERSION_2,
+		.next_addr = IMAGE_ADDR,
+		.next_mode = FW_DYNAMIC_INFO_NEXT_MODE_S,
+		.options = 0,
+		.boot_hart = FW_DYNAMIC_INFO_BOOT_HART_DEFAULT,
+	};
 
 	/* Jump to OpenSBI */
 	for (long i = 1; i < CONFIG_MP_NUM_CPUS; ++i) {

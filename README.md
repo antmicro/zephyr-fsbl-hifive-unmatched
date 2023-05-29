@@ -6,7 +6,8 @@ This application is an FSBL for booting Linux on the HiFive Unmatched board.
 Boot stages:
 1. Zephyr FSBL
     - loads OpenSBI, the Linux kernel, and the device tree at specific addresses in memory
-2. OpenSBI (jump target)
+    - prepares structure read by OpenSBI
+2. OpenSBI (dynamic target)
     - prepares the SBI interface and jumps to Linux
 3. Linux
 
@@ -142,7 +143,7 @@ Before running these commands, verify the path to the SD card on your PC and cha
     ```
     mkdir mnt
     sudo mount /dev/sdc2 mnt
-    sudo cp path/to/fw_jump.bin mnt/opensbi.bin
+    sudo cp path/to/fw_dynamic.bin mnt/opensbi.bin
     sudo cp path/to/dtb mnt/hifive-unmatched-a00.dtb
     sudo cp path/to/Image mnt/Image
     sudo umount mnt
