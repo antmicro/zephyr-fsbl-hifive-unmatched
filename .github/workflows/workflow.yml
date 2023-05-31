@@ -1,0 +1,92 @@
+name: Build binaries
+on: push
+
+jobs:
+  build_zephyr:
+    name: Build Zephyr FSBL binary
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - name: Install tuttest
+        run: pip install git+https://github.com/antmicro/tuttest.git
+
+      - name: Install python dependencies
+        run: tuttest README.md python-deps | bash -x -
+
+      - name: Install Zephyr dependencies
+        run: tuttest README.md zephyr-deps | sudo bash -x -
+
+      - name: Setup Zephyr SDK
+        run: tuttest README.md zephyr-sdk-setup | bash -x -
+
+      - name: Init west
+        run: tuttest README.md zephyr-init | bash -x -
+
+      - name: Build application
+        run: tuttest README.md zephyr-build | bash -x -
+
+      - name: Verify binaries
+        shell: bash
+        env:
+          ZEPHYR_FILES: |
+            build/zephyr/zephyr.bin
+            build/zephyr/zephyr.dts
+            build/zephyr/zephyr.elf
+        run: |
+          ./.github/scripts/validate-artifacts.sh ${ZEPHYR_FILES} ||
+          (echo "::error::Can't find all expected files. Something hasn't been build." && exit 1)
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: zephyr
+          if-no-files-found: error
+          path: |
+            build/zephyr/zephyr.bin
+            build/zephyr/zephyr.dts
+            build/zephyr/zephyr.elf
+
+  build_images:
+    name: "Build other binaries"
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - name: Install tuttest
+        run: pip install git+https://github.com/antmicro/tuttest.git
+
+      - name: Install Buildroot dependencies
+        run: tuttest README.md buildroot-deps | sudo bash -x -
+
+      - name: Clone and build with buildroot
+        run: |
+          tuttest README.md buildroot-clone | bash -x -
+          tuttest README.md buildroot-build | bash -x -
+
+      - name: Verify binaries
+        shell: bash
+        env:
+          BUILDROOT_FILES: |
+            buildroot/output/images/fw_dynamic.bin
+            buildroot/output/images/fw_dynamic.elf
+            buildroot/output/images/hifive-unmatched-a00.dtb
+            buildroot/output/images/Image
+            buildroot/output/images/rootfs.cpio
+        run: |
+          ./.github/scripts/validate-artifacts.sh ${BUILDROOT_FILES} ||
+          (echo "::error::Can't find all expected files. Something hasn't been build." && exit 1)
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: images
+          if-no-files-found: error
+          path: |
+            buildroot/output/images/fw_dynamic.bin
+            buildroot/output/images/fw_dynamic.elf
+            buildroot/output/images/hifive-unmatched-a00.dtb
+            buildroot/output/images/Image
+            buildroot/output/images/rootfs.cpio
