@@ -4,3 +4,4 @@ bootloader/
 modules/
 tools/
 zephyr/
+buildroot/

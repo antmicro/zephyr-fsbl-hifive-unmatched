@@ -1,0 +1,21 @@
+diff --git a/arch/riscv/boot/dts/sifive/fu740-c000.dtsi b/arch/riscv/boot/dts/sifive/fu740-c000.dtsi
+index 43bed6c0a..05764aa14 100644
+--- a/arch/riscv/boot/dts/sifive/fu740-c000.dtsi
++++ b/arch/riscv/boot/dts/sifive/fu740-c000.dtsi
+@@ -185,6 +185,16 @@ prci: clock-controller@10000000 {
+ 			#clock-cells = <1>;
+ 			#reset-cells = <1>;
+ 		};
++		clint: clint@2000000 {
++			compatible = "riscv,clint0";
++			interrupts-extended = <&cpu0_intc 3 &cpu0_intc 7
++					       &cpu1_intc 3 &cpu1_intc 7
++					       &cpu2_intc 3 &cpu2_intc 7
++					       &cpu3_intc 3 &cpu3_intc 7
++					       &cpu4_intc 3 &cpu4_intc 7>;
++			reg = <0x0 0x2000000 0x0 0x10000>;
++			u-boot,dm-spl;
++		};
+ 		uart0: serial@10010000 {
+ 			compatible = "sifive,fu740-c000-uart", "sifive,uart0";
+ 			reg = <0x0 0x10010000 0x0 0x1000>;
