@@ -1,0 +1,13 @@
+manifest:
+  remotes:
+    - name: zephyrproject-rtos
+      url-base: https://github.com/antmicro
+
+  projects:
+    - name: zephyr
+      remote: zephyrproject-rtos
+      revision: ext2-pr1
+      import: true
+
+# NOTE: After ext2 implementation is merged into Zephyr
+#       the Zephyr repository with main branch may be used here
