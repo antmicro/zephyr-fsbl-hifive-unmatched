@@ -1,12 +1,12 @@
 manifest:
   remotes:
     - name: zephyrproject-rtos
-      url-base: https://github.com/antmicro
+      url-base: https://github.com/zephyrproject-rtos
 
   projects:
     - name: zephyr
       remote: zephyrproject-rtos
-      revision: ext2-pr1
+      revision: main
       import: true
 
 # NOTE: After ext2 implementation is merged into Zephyr
